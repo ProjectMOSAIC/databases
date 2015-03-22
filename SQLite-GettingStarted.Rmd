@@ -1,7 +1,7 @@
 ---
-title: 'Airline delay in R: setting up your own SQLite database using Mac OS X'
-author: "Nicholas J. Horton"
-date: "March 21, 2015"
+title: 'Airline delay in R: setting up your own SQLite database using dplyr'
+author: "Nicholas J. Horton and Randall Pruim"
+date: "March 23, 2015"
 output:
   html_document:
     fig_height: 4
@@ -22,7 +22,8 @@ require(mosaic)
 ```
 
 ```{r include=FALSE}
-# Some customization.  You can alter or delete as desired (if you know what you are doing).
+# Some customization.  
+# You can alter or delete as desired (if you know what you are doing).
 
 # This changes the default colors in lattice plots.
 trellis.par.set(theme=theme.mosaic())  
@@ -35,25 +36,39 @@ opts_chunk$set(
 )
 ```
 
-```{r, include=FALSE}
-# Load additional packages here.  Uncomment the line below to use Project MOSAIC data sets.
-# require(mosaicData)   
-```
 
-This file describes how to set up access to a subset of the airline delays dataset in R using SQLite using Mac OS X.  This Markdown down and more information and resources can be found at: 
-http://www.amherst.edu/~nhorton/precursors  
-
-You should edit the following to specify the directory that you want to use for the database:
-
-```{r}
-dbdir = "~/Desktop/AirlineDelays"
-```
+This file describes how to create an SQLite database containing a subset 
+of the airline delays data using the `dplyr` package in R.
 
 
-0. [Install necessary packages](#prelim)
 1. [Create a directory to store the data and database](#set_working_dir)
+2. [Install necessary R packages](#prelim)
 3. [Set up the database](#create_db)
 4. [Test the setup](#test_db)
+
+### Create a directory to store the database
+<a name="set_working_dir"></a>
+
+By default, the database will be created in the directory where you compile this
+RMarkdown file, but you can edit the line below to choose a different location.
+
+```{r set-working-dir}
+dbdir <- "."  
+# example alternative
+# dbdir <- "~/Desktop/AirlineDelays"
+```
+
+Let's create the directory (if it doesn't already exist) used to store the database, and change to that working directory.
+
+```{r create-working-directory}
+if (!file.exists(dbdir)) {
+  if (! try(dir.create(dbdir))) {
+   stop("ERROR: can't create ", dbdir, "\n")
+  }
+}
+setwd(dbdir)
+old <- opts_knit$set(root.dir=getwd())  # also need to move within markdown 
+```
 
 
 ### Install necessary packages
@@ -61,7 +76,7 @@ dbdir = "~/Desktop/AirlineDelays"
 
 Let's just check what version of R and RStudio that you are running:
 
-```{r}
+```{r version-info}
 try(rstudio::versionInfo())
 sessionInfo()
 ```
@@ -69,45 +84,22 @@ sessionInfo()
 This should be at least RStudio 0.98 and R 3.1 or later.
 
 Before you begin, you need to install necessary packages.
-```{r, message=FALSE}
-if (! (require(RSQLite) &  
-       require(dplyr) & 
-       require(tidyr) & 
-       require(mosaic) & 
-       require(knitr) & 
-       require(nycflights13) & 
-       require(lubridate)) )
-{
-  try(install.packages(
-    c("RSQLite", "dplyr", "tidyr", "mosaic", "knitr", "nycflights13", "lubridate")
-  ))
-}
-```
-
-
-### Create a directory to store the database
-<a name="set_working_dir"></a>
-
-Let's create the directory used to store the database, and change to that working directory.
-
-```{r}
-if (!file.exists(dbdir)) {
-  if (! try(dir.create(dbdir))) {
-   stop("ERROR: can't create ", dbdir, "\n")
+```{r, load-packages, message=FALSE}
+lapply(
+  c("RSQLite", "dplyr", "tidyr", "mosaic", "knitr", "lubridate"),
+  function(pkg) {
+    if (!require(pkg, character.only=TRUE)) try(install.packages(pkg))
   }
-}
-setwd(dbdir)
-getwd()
-old <- opts_knit$set(root.dir=dbdir)  # also need to move within markdown 
+)
 ```
 
 
 ### Set up the database using dplyr
 <a name="create_db"></a>
 
-We will read in some data files as CSVs, change some of the names to make them more
+We will read in some CSV data files, change some of the names to make them more
 consistent, and the store the results in an SQLite database.
-```{r}
+```{r, fetch-files}
 planes <- 
   read.file("http://www.amherst.edu/~nhorton/precursors/files/plane-data.csv") %>%
   rename( 
@@ -144,16 +136,18 @@ flights <-
   )
 ```
 
-```{r}
+```{r build-database}
 # create a new (empty) data base
-ontime_db <- src_sqlite("ontime.sqlite3", create = TRUE)
+if (file.exists("Airlines.sqlite3")) { file.remove("Airlines.sqlite3") }
+Airlines_db <- src_sqlite("Airlines.sqlite3", create = TRUE)
 
 # now pump in some tables, adding indices to make access faster
-copy_to(ontime_db, planes,  temporary = FALSE, 
+copy_to(Airlines_db, planes,  temporary = FALSE, 
         indexes = list( 
           "tailnum")
         )
-copy_to(ontime_db, airports, temporary=FALSE,
+
+copy_to(Airlines_db, airports, temporary=FALSE,
         indexes = list(
           "iata",
           "airport",
@@ -161,13 +155,13 @@ copy_to(ontime_db, airports, temporary=FALSE,
           )
         )
 
-copy_to(ontime_db, carriers, temporary=FALSE,
+copy_to(Airlines_db, carriers, temporary=FALSE,
         indexes = list(
           "code"
           )
         )
 
-copy_to(ontime_db, flights, temporary=FALSE,
+copy_to(Airlines_db, flights, temporary=FALSE,
         indexes = list(
           c("Year", "Month", "DayofMonth"),
           "DayOfWeek",
@@ -184,8 +178,8 @@ copy_to(ontime_db, flights, temporary=FALSE,
 ### Test the setup
 <a name="test_db"></a>
 
-```{r}
-my_db <- src_sqlite(path="ontime.sqlite3")
+```{r test-extraction}
+my_db <- src_sqlite(path="Airlines.sqlite3")
 flights <- tbl(my_db, "flights")   # link to some useful tables
 airports <- tbl(my_db, "airports")
 carriers <- tbl(my_db, "carriers")
@@ -201,12 +195,7 @@ to have the correct data in it.
 opts_knit$set(root.dir=old$root.dir)
 ```
 
-Let's download the file `test-sqlite.Rmd` which contains additional examples.
-```{r}
-download.file(
-  "http://www.amherst.edu/~nhorton/precursors/files/test-sqlite.Rmd", 
-  "test-sqlite.Rmd"
-)
+To perform additional tests, download and knit [this additional Rmd file](  "https://raw.githubusercontent.com/ProjectMOSAIC/databases/master/SQLite-Testing.Rmd")
 ```
 
 
