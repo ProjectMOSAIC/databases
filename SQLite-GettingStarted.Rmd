@@ -1,0 +1,220 @@
+---
+title: 'Airline delay in R: setting up your own SQLite database using Mac OS X'
+author: "Nicholas J. Horton"
+date: "March 21, 2015"
+output:
+  html_document:
+    fig_height: 4
+    fig_width: 6
+  pdf_document:
+    fig_height: 4
+    keep_tex: yes
+  word_document:
+    fig_height: 4
+    fig_width: 6
+---
+
+
+```{r include=FALSE}
+# Don't delete this chunk if you are using the mosaic package
+# This loads the mosaic and dplyr packages
+require(mosaic)
+```
+
+```{r include=FALSE}
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+
+# This changes the default colors in lattice plots.
+trellis.par.set(theme=theme.mosaic())  
+
+# knitr settings to control how R chunks work.
+require(knitr)
+opts_chunk$set(
+  tidy=FALSE,     # display code as typed
+  size="small"    # slightly smaller font for code
+)
+```
+
+```{r, include=FALSE}
+# Load additional packages here.  Uncomment the line below to use Project MOSAIC data sets.
+# require(mosaicData)   
+```
+
+This file describes how to set up access to a subset of the airline delays dataset in R using SQLite using Mac OS X.  This Markdown down and more information and resources can be found at: 
+http://www.amherst.edu/~nhorton/precursors  
+
+You should edit the following to specify the directory that you want to use for the database:
+
+```{r}
+dbdir = "~/Desktop/AirlineDelays"
+```
+
+
+0. [Install necessary packages](#prelim)
+1. [Create a directory to store the data and database](#set_working_dir)
+3. [Set up the database](#create_db)
+4. [Test the setup](#test_db)
+
+
+### Install necessary packages
+<a name="prelim"></a>
+
+Let's just check what version of R and RStudio that you are running:
+
+```{r}
+try(rstudio::versionInfo())
+sessionInfo()
+```
+
+This should be at least RStudio 0.98 and R 3.1 or later.
+
+Before you begin, you need to install necessary packages.
+```{r, message=FALSE}
+if (! (require(RSQLite) &  
+       require(dplyr) & 
+       require(tidyr) & 
+       require(mosaic) & 
+       require(knitr) & 
+       require(nycflights13) & 
+       require(lubridate)) )
+{
+  try(install.packages(
+    c("RSQLite", "dplyr", "tidyr", "mosaic", "knitr", "nycflights13", "lubridate")
+  ))
+}
+```
+
+
+### Create a directory to store the database
+<a name="set_working_dir"></a>
+
+Let's create the directory used to store the database, and change to that working directory.
+
+```{r}
+if (!file.exists(dbdir)) {
+  if (! try(dir.create(dbdir))) {
+   stop("ERROR: can't create ", dbdir, "\n")
+  }
+}
+setwd(dbdir)
+getwd()
+old <- opts_knit$set(root.dir=dbdir)  # also need to move within markdown 
+```
+
+
+### Set up the database using dplyr
+<a name="create_db"></a>
+
+We will read in some data files as CSVs, change some of the names to make them more
+consistent, and the store the results in an SQLite database.
+```{r}
+planes <- 
+  read.file("http://www.amherst.edu/~nhorton/precursors/files/plane-data.csv") %>%
+  rename( 
+    TailNum = tailnum,
+    Type = type,
+    Manufacturer = manufacturer,
+    IssueDate = issue_date,
+    Model = model,
+    Status = status,
+    AircraftType = aircraft_type,
+    EngineType = engine_type,
+    Year = year
+  )
+  
+airports <- read.file("http://www.amherst.edu/~nhorton/precursors/files/airports.csv") %>% 
+  rename(
+    IATA = iata,
+    Airport = airport,
+    City = city,
+    State = state,
+    Country = country,
+    Latitude = lat,
+    Longitude = long
+    )
+
+# finally one with names we can keep as is
+carriers <- 
+  read.file("http://www.amherst.edu/~nhorton/precursors/files/carriers.csv") 
+
+flights <- 
+  read.file("http://www.amherst.edu/~nhorton/precursors/files/2014-01.csv") %>%
+  rename(
+    DayOfMonth = DayofMonth
+  )
+```
+
+```{r}
+# create a new (empty) data base
+ontime_db <- src_sqlite("ontime.sqlite3", create = TRUE)
+
+# now pump in some tables, adding indices to make access faster
+copy_to(ontime_db, planes,  temporary = FALSE, 
+        indexes = list( 
+          "tailnum")
+        )
+copy_to(ontime_db, airports, temporary=FALSE,
+        indexes = list(
+          "iata",
+          "airport",
+          c("city", "state", "country")
+          )
+        )
+
+copy_to(ontime_db, carriers, temporary=FALSE,
+        indexes = list(
+          "code"
+          )
+        )
+
+copy_to(ontime_db, flights, temporary=FALSE,
+        indexes = list(
+          c("Year", "Month", "DayofMonth"),
+          "DayOfWeek",
+          "UniqueCarrier",
+          "FlightNum",
+          "TailNum",
+          "Origin",
+          "Dest"
+          )
+        )
+```
+
+
+### Test the setup
+<a name="test_db"></a>
+
+```{r}
+my_db <- src_sqlite(path="ontime.sqlite3")
+flights <- tbl(my_db, "flights")   # link to some useful tables
+airports <- tbl(my_db, "airports")
+carriers <- tbl(my_db, "carriers")
+planes <- tbl(my_db, "planes")
+filter(airports, IATA %in% c('ALB', 'BDL', 'BTV'))   # what are these airports?
+```
+
+If this displays information about Albany, Bradley, and Burlington airport, then you have 
+successfully set up a database system and at least the `airports` table would appear
+to have the correct data in it.
+
+```{r}
+opts_knit$set(root.dir=old$root.dir)
+```
+
+Let's download the file `test-sqlite.Rmd` which contains additional examples.
+```{r}
+download.file(
+  "http://www.amherst.edu/~nhorton/precursors/files/test-sqlite.Rmd", 
+  "test-sqlite.Rmd"
+)
+```
+
+
+
+  
+
+
+
+
+
+
