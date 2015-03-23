@@ -91,6 +91,7 @@ lapply(
     if (!require(pkg, character.only=TRUE)) try(install.packages(pkg))
   }
 )
+
 ```
 
 
@@ -101,7 +102,7 @@ We will read in some CSV data files, change some of the names to make them more
 consistent, and the store the results in an SQLite database.
 ```{r, fetch-files}
 planes <- 
-  read.file("http://www.amherst.edu/~nhorton/precursors/files/plane-data.csv") %>%
+  read.file("https://raw.githubusercontent.com/ProjectMOSAIC/databases/master/Data/plane-data.csv") %>%
   rename( 
     TailNum = tailnum,
     Type = type,
@@ -114,7 +115,7 @@ planes <-
     Year = year
   )
   
-airports <- read.file("http://www.amherst.edu/~nhorton/precursors/files/airports.csv") %>% 
+airports <- read.file("https://raw.githubusercontent.com/ProjectMOSAIC/databases/master/Data/airports.csv") %>% 
   rename(
     IATA = iata,
     Airport = airport,
@@ -127,10 +128,10 @@ airports <- read.file("http://www.amherst.edu/~nhorton/precursors/files/airports
 
 # finally one with names we can keep as is
 carriers <- 
-  read.file("http://www.amherst.edu/~nhorton/precursors/files/carriers.csv") 
+  read.file("https://raw.githubusercontent.com/ProjectMOSAIC/databases/master/Data/carriers.csv") 
 
 flights <- 
-  read.file("http://www.amherst.edu/~nhorton/precursors/files/2014-01.csv") %>%
+  read.file("https://github.com/ProjectMOSAIC/databases/raw/master/Data/2014-01.csv") %>%
   rename(
     DayOfMonth = DayofMonth
   )
@@ -184,7 +185,8 @@ flights <- tbl(my_db, "flights")   # link to some useful tables
 airports <- tbl(my_db, "airports")
 carriers <- tbl(my_db, "carriers")
 planes <- tbl(my_db, "planes")
-filter(airports, IATA %in% c('ALB', 'BDL', 'BTV'))   # what are these airports?
+airports %>% 
+  filter(IATA %in% c('ALB', 'BDL', 'BTV'))   # what are these airports?
 ```
 
 If this displays information about Albany, Bradley, and Burlington airport, then you have 
