@@ -9,7 +9,16 @@ The resources in this repository are intended to help instructors and students m
  * installing and loading the necessary R packages
  * creating  a simple SQLite database (containing four tables) on your local machine.  
  
-The data are a subset of a much larger database of airline delays.  
+The data are a subset of a much larger database of airline delays.
 Each of these tables is stored as a CSV.  The result is a modestly sized data base
-with which one can learn basic data base operations in R.
+with which one can learn basic data base operations in R.  By default, 
+this will be created in the directory where the Rmd file is located, but you can
+edit the code (or move the file) if you prefer to have this located in a different
+directory.
+
+**Note:** Compiling this file will take some time because of the data retrieval.
+When successfully compiled, an sqlite data base file will be created locally.
+Additional work with the data base only requires this one file, so there is no reason
+to reknit this file unless you need to recreate the datase file.
+
 
