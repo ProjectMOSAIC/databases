@@ -7,7 +7,7 @@ The resources in this repository are intended to help instructors and students m
 [SQLite-GettingStarted.Rmd](SQLite-GettingStarted.Rmd) will walk you through 
 
  * installing and loading the necessary R packages
- * creating  a simple SQLite database (containing four tables) on your local machine.  
+ * creating  [a simple SQLite database](Airlines.sqlite3) (containing four tables) on your local machine.  
  
 The data are a subset of a much larger database of airline delays.
 Each of these tables is stored as a CSV.  The result is a modestly sized data base
