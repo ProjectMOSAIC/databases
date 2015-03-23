@@ -91,7 +91,6 @@ lapply(
     if (!require(pkg, character.only=TRUE)) try(install.packages(pkg))
   }
 )
-
 ```
 
 
@@ -100,7 +99,7 @@ lapply(
 
 We will read in some CSV data files, change some of the names to make them more
 consistent, and the store the results in an SQLite database.
-```{r, fetch-files}
+```{r, fetch-files, message=FALSE}
 planes <- 
   read.file("https://raw.githubusercontent.com/ProjectMOSAIC/databases/master/Data/plane-data.csv") %>%
   rename( 
@@ -129,9 +128,11 @@ airports <- read.file("https://raw.githubusercontent.com/ProjectMOSAIC/databases
 # finally one with names we can keep as is
 carriers <- 
   read.file("https://raw.githubusercontent.com/ProjectMOSAIC/databases/master/Data/carriers.csv") 
+```
 
-flights <- 
-  read.file("https://github.com/ProjectMOSAIC/databases/raw/master/Data/2014-01.csv") %>%
+```{r fetch-flights}
+# this is one breaking with a "back-end read error" when attempting from github
+flights <- read.file("http://www.amherst.edu/~nhorton/precursors/files/2014-01.csv") %>%
   rename(
     DayOfMonth = DayofMonth
   )
