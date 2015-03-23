@@ -79,7 +79,7 @@ Students can use this dataset to address questions that they find real and relev
 ```{r echo=TRUE, message=FALSE}
 now <- Sys.time(); now
 require(dplyr); require(mosaic); require(lubridate) 
-my_db <- src_sqlite(path="ontime.sqlite3")
+my_db <- src_sqlite(path="Airlines.sqlite3")
 ```
 
 This example uses data from a database with multiple tables.  
@@ -213,7 +213,7 @@ Mapping is also possible, since the latitude and longitude of the airports are p
 
 ```{r, echo=TRUE, warning=FALSE, message=FALSE}
 require(RSQLite)
-con <- dbConnect(SQLite(), "ontime.sqlite3")
+con <- dbConnect(SQLite(), "Airlines.sqlite3")
 
 orig <- dbGetQuery(con, "SELECT * FROM airports WHERE IATA = 'BDL'")
 dests <- dbGetQuery(con, "SELECT a.IATA, Latitude, Longitude, sum(1) as numFlights

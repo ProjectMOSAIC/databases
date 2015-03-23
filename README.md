@@ -21,4 +21,8 @@ When successfully compiled, an sqlite data base file will be created locally.
 Additional work with the data base only requires this one file, so there is no reason
 to reknit this file unless you need to recreate the datase file.
 
+## Some additional SQLite examples
 
+Knitting the Getting Started RMarkdown file will download [an additional Rmd file](SQLite-Testing.Rmd) that can 
+be used to test the SQLite data base that was created or to see more examples of accessing data from
+a data base.
