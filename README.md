@@ -10,19 +10,19 @@ The resources in this repository are intended to help instructors and students m
  * creating  [a simple SQLite database](Airlines.sqlite3) (containing four tables) on your local machine.  
  
 The data are a subset of a much larger database of airline delays.
-Each of these tables is stored as a CSV.  The result is a modestly sized data base
-with which one can learn basic data base operations in R.  By default, 
+Each of these tables is stored as a CSV.  The result is a modestly sized database
+with which one can learn basic database operations in R.  By default, 
 this will be created in the directory where the Rmd file is located, but you can
 edit the code (or move the file) if you prefer to have this located in a different
 directory.
 
 **Note:** Compiling this file will take some time because of the data retrieval.
-When successfully compiled, an sqlite data base file will be created locally.
-Additional work with the data base only requires this one file, so there is no reason
+When successfully compiled, an sqlite database file will be created locally.
+Additional work with the database only requires this one file, so there is no reason
 to reknit this file unless you need to recreate the datase file.
 
 ## Some additional SQLite examples
 
 Knitting the Getting Started RMarkdown file will download [an additional Rmd file](SQLite-Testing.Rmd) that can 
-be used to test the SQLite data base that was created or to see more examples of accessing data from
-a data base.
+be used to test [the SQLite database](Airlines.sqlite3) that was created or to see more examples of accessing data from
+a database.
